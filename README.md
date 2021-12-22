@@ -23,54 +23,45 @@ O programa requer as bibliotecas listadas em `requirements.txt`.
 
 Recomenda-se usar um ambiente virtual para instalar as bibliotecas.
 
-Configuração e uso de um ambiente virtual:
-
-- Crie o ambiente virtual e instale alguns recursos básicos:
+Comandos para criar o ambiente e instalar as bibliotecas:
 
 ```shell
 python3 -m venv .venv-log
 source .venv-log/bin/activate
 python3 -m pip install -U pip
 pip install -U setuptools wheel
+pip install -r requirements.txt
 deactivate
 ```
 
-- Ative o ambiente virtual:
+## Execução
+
+- Ative o ambiente virtual criado anteriormente:
 
 ```shell
 source .venv-log/bin/activate
 ```
 
-- Instale as bibliotecas requeridas:
+- Posicione o arquivo de entrada dentro do diretório `entrada`.
 
-```shell
-pip install -r requirements.txt
-```
-
-## Execução
-
-Posicione o arquivo de entrada dentro do diretório `entrada`.
-
-Preferencialmente, crie um usuário de teste somente para rodar este programa,
+- Preferencialmente, crie um usuário de teste somente para rodar este programa,
 com nome `postgres` e senha `postgres`.
 Além disso, crie um novo banco de dados com o nome `log`.
 
-Execute o programa com o comando abaixo (onde `<arquivo>` é o nome do arquivo):
+- Execute o programa com o comando abaixo (onde `<arquivo>` é o nome do arquivo):
 
 ```shell
 python3 log.py entrada/<arquivo>
 ```
 
-É possível, ao invés disso, fornecer usuário, senha e banco de dados quaisquer;
+- É possível, ao invés disso, fornecer usuário, senha e banco de dados quaisquer;
 todavia, será necessário explicitá-los ao executar o programa (`<banco>`, `<usuario>` e `<senha>` são, respectivamento, o banco, usuário e senha personalizados):
 
 ```shell
 python3 log.py entrada/<arquivo> --banco <banco> --usuario <usuario> --senha <senha>
 ```
 
-## Desativando o ambiente virtual
-
-Quando terminar de usar o programa, desative o ambiente virtual:
+- Quando terminar de usar o programa, desative o ambiente virtual:
 
 ```shell
 deactivate
