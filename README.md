@@ -12,6 +12,7 @@ Assegure-se de que `python3` e `pip` estejam instalados.
 Clone o repositório:
 
 ```shell
+rm -rf log
 git clone --depth 1 https://github.com/PauloGSC/log.git
 cd log
 ```
