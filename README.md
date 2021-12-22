@@ -43,11 +43,11 @@ deactivate
 source .venv-log/bin/activate
 ```
 
-- Posicione o arquivo de entrada dentro do diretório `entrada`.
+- Posicione o arquivo de entrada dentro do diretório `entrada`
 
 - Preferencialmente, crie um usuário de teste somente para rodar este programa,
 com nome `postgres` e senha `postgres`.
-Além disso, crie um novo banco de dados com o nome `log`.
+Além disso, crie um novo banco de dados com o nome `log`
 
 - Execute o programa com o comando abaixo (onde `<arquivo>` é o nome do arquivo):
 
