@@ -26,6 +26,7 @@ Recomenda-se usar um ambiente virtual para instalar as bibliotecas.
 Comandos para criar o ambiente e instalar as bibliotecas:
 
 ```shell
+rm -rf .venv-log
 python3 -m venv .venv-log
 source .venv-log/bin/activate
 python3 -m pip install -U pip
