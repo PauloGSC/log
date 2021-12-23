@@ -11,6 +11,15 @@ from terminaltables import SingleTable as Table
 TABELA = "log" # tabela única do banco
 
 
+def imprimirTabela():
+	cons = [tuple(cols)]
+	cur.execute(f"SELECT * FROM {TABELA} ORDER BY id;")
+	cons.extend(cur.fetchall())
+	tab = Table(cons)
+	tab.justify_columns = {c: "center" for c, _ in enumerate(cols)}
+	print(tab.table)
+
+
 # obtendo argumentos da linha de comando
 
 psr = argparse.ArgumentParser(
@@ -72,7 +81,7 @@ sql = [f"{col} INT" for col in cols]
 sql += [f"PRIMARY KEY (id)"]
 sql = ",".join(sql)
 
-ids = list(sorted(ids))
+ids = sorted(ids)
 
 # criando tabela
 
@@ -111,23 +120,13 @@ tuplas2 = [
 sql = ["(" + ",".join(t) + ")" for t in tuplas2]
 sql = ",".join(sql)
 
-# sql = []
-# for k, v in tuplas.items():
-# 	ins = [str(k)]
-# 	for val in v.values():
-# 		ins.append(str(val))
-# 	ins = "(" + ",".join(ins) + ")"
-# 	sql.append(ins)
-# sql = ",".join(sql)
-
 cur.execute(f"INSERT INTO {TABELA} VALUES {sql};")
 
-tuplas2.insert(0, cols)
-tab = Table(tuplas2)
-tab.justify_columns = {c: "center" for c, _ in enumerate(cols)}
-print("Tabela inicial:")
+# imprimindo tabela inicial
+
 print()
-print(tab.table)
+print("Tabela inicial:")
+imprimirTabela()
 
 # --- 2) BUSCA PELAS TRANSAÇÕES QUE SOFRERAM REDO
 
@@ -165,20 +164,39 @@ for linha in secao:
 		n_redo.remove(trans)
 		redo.append(trans)
 
-print(redo)
-print(n_redo)
-
 print()
 print(f"Transações que não sofrem REDO: [{','.join(n_redo)}]")
 print(f"Transações que sofrem REDO: [{','.join(redo)}]")
-print()
 
 # --- 3) SINCRONIZAÇÃO DO LOG COM O BANCO
 
 # busca por alterações commitadas, e atualiza na tabela
 # a busca é feita sequencialmente
+# critério: transação não pode estar na lista 'n_redo'
 
-# --- 5) FECHAMENTOS
+print()
+for linha in linhas:
+	linha2 = linha.replace(" ", "")[1:-1]
+	if re.search(r"^\w+,\w+,\w+,\w+$", linha2):
+		trans, id_, col, val = linha2.split(",")
+		if trans not in n_redo: # critério satisfeito
+			cur.execute(f"""
+				UPDATE {TABELA}
+				SET {col}=(%s)
+				WHERE id=(%s);""",
+				(val, id_)
+			)
+			print(f"Atualizando {col}={val} onde id={id_}")
+
+# imprimindo tabela final
+
+print()
+print("Tabela final:")
+imprimirTabela()
+
+print()
+
+# --- 4) FECHAMENTOS
 
 cur.close()
 con.close()
