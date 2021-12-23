@@ -1,7 +1,8 @@
 # Arquivos de entrada
 
 entrada/*.txt
-!entrada/entrada.txt
+!entrada/entrada1.txt
+!entrada/entrada2.txt
 
 # Ambientes virtuais Python
 
