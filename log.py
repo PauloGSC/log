@@ -2,7 +2,6 @@
 
 
 import argparse
-from copy import deepcopy
 import re
 
 import psycopg2 as psql
@@ -25,6 +24,8 @@ psr.add_argument("--senha", default="postgres") # opcional
 
 args = psr.parse_args()
 
+# --- 1) PARTE INICIAL
+
 # abrindo arquivo de log e extraindo o seu conteúdo
 
 with open(args.arquivo) as arq:
@@ -43,6 +44,8 @@ except:
 
 con.autocommit = True # habilita transações implícitas
 cur = con.cursor()
+
+# --- 2) CRIAÇÃO E INSERÇÃO NA TABELA
 
 # descobrindo colunas da tabela, conforme cabeçalho
 # também coleta as chaves primárias (id)
@@ -97,6 +100,8 @@ for i, linha in enumerate(linhas):
 
 	tuplas[id_][col] = val
 
+del linhas[:i+1] # deleta cabeçalho
+
 # inserindo tuplas
 
 tuplas2 = [
@@ -123,9 +128,57 @@ tab.justify_columns = {c: "center" for c, _ in enumerate(cols)}
 print("Tabela inicial:")
 print()
 print(tab.table)
+
+# --- 2) BUSCA PELAS TRANSAÇÕES QUE SOFRERAM REDO
+
+# busca pelo último checkpoint efetivado (<end ckpt>)
+# a busca é feita de trás para frente
+
+achou_end = False
+for i in reversed(range(len(linhas))):
+	if linhas[i].lower().startswith("<end"): # <end ckpt>
+		achou_end = True
+	elif re.search(r"^<start (ckpt|checkpoint)", linhas[i], re.I):
+		if achou_end:
+			break
+
+# busca por transações que (não) sofrem REDO
+
+if not achou_end:
+	secao = linhas[:] # seção de busca
+	n_redo = [] # transações em aberto
+else:
+	secao = linhas[i+1:] # a partir do último ckpt válido
+	ap = linhas[i].find("(")
+	fp = linhas[i].rfind(")")
+	n_redo = linhas[i][ap+1:fp].replace(" ", "").split(",")
+
+redo = [] # transações commitadas
+for linha in secao:
+	# <start Tn>: adiciona Tn na lista de n_redo
+	# <commit Tn>: retira de n_redo e coloca em redo
+	if re.search(r"^<start \w+>$", linha, re.I): # <start Tn>
+		trans = linha[linha.find(" ")+1:linha.rfind(">")]
+		n_redo.append(trans)
+	elif re.search(r"<commit \w+>$", linha, re.I): # <commit Tn>
+		trans = linha[linha.find(" ")+1:linha.rfind(">")]
+		n_redo.remove(trans)
+		redo.append(trans)
+
+print(redo)
+print(n_redo)
+
+print()
+print(f"Transações que não sofrem REDO: [{','.join(n_redo)}]")
+print(f"Transações que sofrem REDO: [{','.join(redo)}]")
 print()
 
-# fechando conexão
+# --- 3) SINCRONIZAÇÃO DO LOG COM O BANCO
+
+# busca por alterações commitadas, e atualiza na tabela
+# a busca é feita sequencialmente
+
+# --- 5) FECHAMENTOS
 
 cur.close()
 con.close()
