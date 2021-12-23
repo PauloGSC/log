@@ -174,7 +174,7 @@ print(f"Transações que sofrem REDO: [{','.join(redo)}]")
 # a busca é feita sequencialmente
 # critério: transação não pode estar na lista 'n_redo'
 
-print()
+nl = False
 for linha in linhas:
 	linha2 = linha.replace(" ", "")[1:-1]
 	if re.search(r"^\w+,\w+,\w+,\w+$", linha2):
@@ -186,6 +186,9 @@ for linha in linhas:
 				WHERE id=(%s);""",
 				(val, id_)
 			)
+			if not nl:
+				print()
+				nl = True
 			print(f"Atualizando {col}={val} onde id={id_}")
 
 # imprimindo tabela final
@@ -200,4 +203,3 @@ print()
 
 cur.close()
 con.close()
-
